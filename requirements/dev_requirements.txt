@@ -1,0 +1,4 @@
+openai
+pydub
+yt-dlp
+ffmpeg-python
