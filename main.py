@@ -1,12 +1,17 @@
 import argparse
 from io import BytesIO
+from typing import List
 import openai
 from pydub import AudioSegment
 import yt_dlp
 
+
+
 parser = argparse.ArgumentParser()
 parser.add_argument("token")
 parser.add_argument("youtube_url")
+parser.add_argument("audience")
+parser.add_argument("format")
 args = parser.parse_args()
 
 def speech_to_text(audio_segments):
@@ -27,12 +32,12 @@ def load_file(filename):
     with open(filename, "r") as file:
         return file.read()
 
-def summarize_text(texts):
+def summarize_text(texts: List[str], audience: str, format: str):
     summaries = []
     for text in texts:
         response = openai.Completion.create(
             model="text-davinci-003",
-            prompt=f"Can you summarize this text from a developer standpoint in bullet points: {text}",
+            prompt=f"Can you summarize this text from a {audience} standpoint in {format}: {text}",
             max_tokens= 2000
         )
         summary = response['choices'][0]['text']
@@ -90,6 +95,8 @@ def extract_info_from_youtube(youtube_url: str):
 
 def main():
     openai.api_key = args.token
+    audience = args.audience
+    format = args.format
     download_audio_from_youtube(args.youtube_url)
     filename = extract_info_from_youtube(args.youtube_url)
     audio = segment_audio(filename)
@@ -97,7 +104,7 @@ def main():
     transcript = speech_to_text(audio)
     write_text_to_file('transcript.md', transcript)
     
-    summary = summarize_text(transcript)
+    summary = summarize_text(transcript,audience,format)
     write_text_to_file('summary.md', summary)
     print(validate_sense_of_whole_text(summary))
 
